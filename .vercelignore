@@ -1,5 +1,7 @@
-﻿.venv/
+.venv/
 main.py
+app.py
+server.py
 train.py
 setup_project.py
 models/
@@ -7,5 +9,5 @@ reports/
 pipeline/
 v2x/
 utils/
-requirements-desktop.txt
+*.py
 *.onnx
