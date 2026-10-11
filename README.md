@@ -6,6 +6,11 @@
 ![V2X](https://img.shields.io/badge/V2X-UDP%20Broadcast-0B7189)
 ![Status](https://img.shields.io/badge/Status-Production-16825D)
 
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://garuda-ai-face-detection-z2gsbjdncxdnwaacefepaa.streamlit.app)
+[![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+
 PROJECT GARUDA is a multimodal edge-AI system for motorcycle rider intent prediction and driver monitoring. It combines forward video, rider-facing visual features, and inertial telemetry to forecast rider intent, detect fatigue and distraction, surface safety alerts on a live HUD, broadcast machine-readable V2X warnings, and produce an auditable ride report.
 
 > **Operational note:** The application is production-oriented, but any deployment on a moving vehicle must be validated against the target camera, lighting, helmet configuration, network, and local safety requirements before live operation.
