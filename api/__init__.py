@@ -1,0 +1,1 @@
+"""FastAPI service for GARUDA inference and telemetry."""
