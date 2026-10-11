@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from api.server import TrajectoryPoint, TrajectoryRequest, service
+from api_backend.server import TrajectoryPoint, TrajectoryRequest, service
 from models.intent_forecaster import INTENT_NAMES
 
 try:

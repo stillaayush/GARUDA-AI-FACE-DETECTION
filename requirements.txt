@@ -1,0 +1,5 @@
+streamlit
+fastapi
+pydantic
+numpy
+pandas
