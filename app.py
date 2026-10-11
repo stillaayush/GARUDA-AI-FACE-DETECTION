@@ -106,7 +106,7 @@ def main() -> None:
         probabilities = pd.DataFrame({"intent": list(forecast["probabilities"]), "probability": list(forecast["probabilities"].values())}).set_index("intent")
         st.bar_chart(probabilities, height=250)
         if show_shap:
-            st.dataframe(pd.DataFrame(forecast["attributions"]), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(forecast["attributions"]), hide_index=True, width="stretch")
 
     st.subheader("Rider telemetry")
     feature_frame = pd.DataFrame([result["features"]]).T.rename(columns={0: "value"})
