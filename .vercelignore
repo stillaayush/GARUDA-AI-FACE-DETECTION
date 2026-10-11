@@ -1,0 +1,11 @@
+﻿.venv/
+main.py
+train.py
+setup_project.py
+models/
+reports/
+pipeline/
+v2x/
+utils/
+requirements-desktop.txt
+*.onnx
