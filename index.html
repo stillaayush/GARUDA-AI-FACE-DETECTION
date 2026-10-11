@@ -47,8 +47,11 @@
     .nav-links { display: flex; gap: 32px; align-items: center; }
     .nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; }
     .nav-links a:hover { color: var(--paper); }
-    .status { color: var(--lime); font: 11px var(--mono); border: 1px solid #4e5a41; padding: 9px 12px; }
+    .status { color: var(--lime); font: 11px var(--mono); border: 1px solid #4e5a41; padding: 9px 12px; transition: color .25s, border-color .25s, box-shadow .25s; }
     .status i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--lime); margin-right: 7px; box-shadow: 0 0 10px var(--lime); }
+    .status.amber { color: #ffc56d; border-color: #80633a; }
+    .status.amber i { background: #ffc56d; box-shadow: 0 0 10px #ffc56d; }
+    .status.pulse { animation: badge-pulse .7s ease; }
 
     .hero { padding: 86px 0 64px; display: grid; grid-template-columns: .95fr 1.05fr; gap: 72px; align-items: end; }
     h1 { font-size: clamp(54px, 7vw, 103px); line-height: .9; letter-spacing: -.075em; font-weight: 500; margin: 18px 0 28px; max-width: 650px; }
@@ -78,6 +81,7 @@
     .bar:nth-last-child(-n+5) { background: var(--lime); }
     .bar:nth-child(1) { height: 16%; } .bar:nth-child(2) { height: 19%; } .bar:nth-child(3) { height: 24%; } .bar:nth-child(4) { height: 20%; } .bar:nth-child(5) { height: 28%; } .bar:nth-child(6) { height: 29%; } .bar:nth-child(7) { height: 35%; } .bar:nth-child(8) { height: 32%; } .bar:nth-child(9) { height: 42%; } .bar:nth-child(10) { height: 39%; } .bar:nth-child(11) { height: 50%; } .bar:nth-child(12) { height: 55%; } .bar:nth-child(13) { height: 53%; } .bar:nth-child(14) { height: 68%; } .bar:nth-child(15) { height: 77%; } .bar:nth-child(16) { height: 83%; } .bar:nth-child(17) { height: 88%; } .bar:nth-child(18) { height: 95%; }
     @keyframes rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    @keyframes badge-pulse { 0%, 100% { box-shadow: 0 0 0 rgba(255, 197, 109, 0); } 45% { box-shadow: 0 0 22px rgba(255, 197, 109, .35); } }
     .signal-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--line); }
     .signal { padding: 17px 12px 18px 0; border-right: 1px solid var(--line); margin-right: 15px; }
     .signal:last-child { border: 0; margin: 0; }
@@ -108,9 +112,9 @@
     .analytics-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
     .analytics-heading h2 { font-size: clamp(30px, 4vw, 48px); letter-spacing: -.055em; font-weight: 500; line-height: .95; margin: 0; }
     .analytics-heading p { max-width: 360px; color: var(--muted); font-size: 13px; line-height: 1.55; margin: 0; }
-    .analytics-frame { position: relative; width: 100%; min-height: 88vh; overflow: hidden; border: 1px solid rgba(255, 255, 255, .1); border-radius: 12px; background: var(--surface); box-shadow: 0 24px 70px rgba(0, 0, 0, .34); }
+    .analytics-frame { position: relative; width: 100%; height: 850px; min-height: 800px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .1); border-radius: 12px; background: var(--surface); box-shadow: 0 24px 70px rgba(0, 0, 0, .34); }
     .analytics-loading { position: absolute; inset: 0; display: grid; place-items: center; background: linear-gradient(110deg, var(--surface) 30%, var(--surface-2) 45%, var(--surface) 60%); background-size: 200% 100%; animation: analytics-shimmer 1.8s linear infinite; color: var(--muted); font: 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
-    .analytics-frame iframe { position: relative; z-index: 1; display: block; width: 100%; min-height: 88vh; border: 0; border-radius: 12px; background: var(--surface); }
+    .analytics-frame iframe { position: relative; z-index: 1; display: block; width: 100%; height: 100%; border: none; border-radius: 12px; background: var(--surface); }
     @keyframes analytics-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
     footer { border-top: 1px solid var(--line); color: var(--muted); font: 10px var(--mono); padding: 19px 0 35px; display: flex; justify-content: space-between; }
 
@@ -122,7 +126,7 @@
       .console-body { padding: 20px; }
       .analytics-heading { align-items: start; flex-direction: column; }
       .analytics-section { padding-bottom: 70px; }
-      .analytics-frame, .analytics-frame iframe { min-height: 86vh; }
+      .analytics-frame { height: 90vh; min-height: 800px; }
       .metrics { grid-template-columns: repeat(2, 1fr); gap: 25px 0; padding-bottom: 60px; }
       .metric { padding: 0 16px; } .metric:nth-child(3) { padding-left: 0; } .metric:nth-child(2) { border: 0; }
       .section { grid-template-columns: 1fr; gap: 38px; padding-bottom: 70px; }
@@ -146,7 +150,7 @@
         <nav class="nav-links" aria-label="Main navigation">
           <a href="#signal">Signal stack</a><a href="#protocol">Protocol</a><a href="#console">Live console</a>
         </nav>
-        <div class="status"><i></i> SYSTEM ONLINE</div>
+        <div class="status" id="statusBadge"><i></i><span id="statusLabel">SYSTEM ONLINE / GREEN</span></div>
       </div>
     </header>
 
@@ -216,21 +220,50 @@
     const chart = document.getElementById('chart');
     for (let i = 0; i < 18; i += 1) { const bar = document.createElement('span'); bar.className = 'bar'; bar.style.animationDelay = `${i * 35}ms`; chart.appendChild(bar); }
     const scenarios = [
-      { action: 'LEFT TURN', confidence: '95%', head: 'LEFT / 18°', velocity: '−4.2 m/s²', lean: 'LEFT / 6.8°', text: 'ALERT READY / CAR LINK STANDBY' },
-      { action: 'LANE SHIFT', confidence: '88%', head: 'RIGHT / 11°', velocity: '−1.8 m/s²', lean: 'RIGHT / 4.2°', text: 'INTENTION SHARED / 1.8s LEAD' },
-      { action: 'BRAKE', confidence: '91%', head: 'CENTER / 02°', velocity: '−7.1 m/s²', lean: 'CENTER / 0.8°', text: 'BRAKE ALERT / CAR LINK ACTIVE' }
+      { action: 'LEFT TURN', confidence: 94, head: 'LEFT / 18°', velocity: '-4.2 m/s²', lean: 'LEFT / 6.8°', text: 'TURN ALERT / CAR LINK STANDBY', risk: 'amber' },
+      { action: 'RIGHT LANE CHANGE', confidence: 88, head: 'RIGHT / 22°', velocity: '+2.1 m/s²', lean: 'RIGHT / 5.2°', text: 'LANE CHANGE / INTENTION SHARED', risk: 'amber' },
+      { action: 'EMERGENCY BRAKE', confidence: 97, head: 'CENTER / 0°', velocity: '-8.7 m/s²', lean: 'CENTER / 0.5°', text: 'BRAKE ALERT / CAR LINK ACTIVE', risk: 'amber' },
+      { action: 'NOMINAL CRUISE', confidence: 99, head: 'CENTER / 2°', velocity: '+0.2 m/s²', lean: 'CENTER / 1.1°', text: 'NOMINAL / CAR LINK STANDBY', risk: 'green' }
     ];
+    const bars = [...chart.querySelectorAll('.bar')];
+    const statusBadge = document.getElementById('statusBadge');
+    const statusLabel = document.getElementById('statusLabel');
     let scenario = 0;
+
+    function updateConfidenceBars(confidence) {
+      bars.forEach((bar, index) => {
+        const progress = (index + 1) / bars.length;
+        const variation = (index % 3) * 2;
+        const height = Math.max(14, Math.round(confidence * (.35 + progress * .55) - variation));
+        bar.style.height = `${height}%`;
+      });
+      chart.classList.remove('chart');
+      void chart.offsetWidth;
+      chart.classList.add('chart');
+    }
+
+    function updateStatus(risk) {
+      statusBadge.classList.remove('green', 'amber', 'pulse');
+      void statusBadge.offsetWidth;
+      statusBadge.classList.add(risk, 'pulse');
+      statusLabel.textContent = `SYSTEM ONLINE / ${risk.toUpperCase()}`;
+    }
+
     document.getElementById('simulate').addEventListener('click', () => {
-      scenario = (scenario + 1) % scenarios.length;
+      let nextScenario = scenario;
+      while (nextScenario === scenario && scenarios.length > 1) {
+        nextScenario = Math.floor(Math.random() * scenarios.length);
+      }
+      scenario = nextScenario;
       const next = scenarios[scenario];
       document.getElementById('prediction').textContent = next.action;
-      document.getElementById('confidence').textContent = next.confidence;
+      document.getElementById('confidence').textContent = `${next.confidence}%`;
       document.getElementById('head').textContent = next.head;
       document.getElementById('velocity').textContent = next.velocity;
       document.getElementById('lean').textContent = next.lean;
       document.getElementById('statusText').textContent = next.text;
-      chart.classList.remove('chart'); void chart.offsetWidth; chart.classList.add('chart');
+      updateConfidenceBars(next.confidence);
+      updateStatus(next.risk);
     });
   </script>
 </body>
