@@ -92,6 +92,9 @@
     .console-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; color: var(--muted); font: 10px var(--mono); }
     .simulate { background: var(--lime); color: var(--ink); border: 0; padding: 10px 15px; cursor: pointer; font: 11px var(--mono); text-transform: uppercase; transition: transform .2s, background .2s; }
     .simulate:hover { transform: translateY(-2px); background: var(--paper); }
+    .hud-btn { background: transparent; color: var(--lime); border: 1px solid var(--lime); padding: 9px 14px; cursor: pointer; font: 11px var(--mono); text-transform: uppercase; transition: transform .2s, background .2s, color .2s; }
+    .hud-btn:hover { transform: translateY(-2px); background: var(--lime); color: var(--ink); }
+    .console-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 
     .rule { border-top: 1px solid var(--line); }
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; padding: 22px 0 76px; }
@@ -164,8 +167,9 @@
           <div class="hero-actions"><a class="launch-link" href="https://garuda-ai-face-detection-z2gsbjdncdxnwaacefepaa.streamlit.app/" target="_blank" rel="noopener noreferrer">Launch Fullscreen Analytics ↗</a></div>
         </div>
         <div class="console" id="console">
-          <div class="console-top"><strong>RIDER 042 / LIVE INFERENCE</strong><span class="live">RECORDING</span></div>
+          <div class="console-top"><strong>RIDER 042 / LIVE INFERENCE</strong><span class="live" id="recordingStatus">RECORDING</span></div>
           <div class="console-body">
+            <video id="webcamPreview" autoplay playsinline muted style="width: 100%; border-radius: 8px; display: none; margin-bottom: 12px;"></video>
             <div class="prediction-label">Predicted intention</div>
             <div class="prediction-row"><h2 id="prediction">LEFT TURN</h2><div class="confidence"><b id="confidence">95%</b><span>confidence</span></div></div>
             <div class="chart" id="chart" aria-label="Confidence rising over the last three seconds"></div>
@@ -174,7 +178,7 @@
               <div class="signal"><small>velocity</small><strong id="velocity">−4.2 m/s²</strong></div>
               <div class="signal"><small>lean angle</small><strong class="warn" id="lean">LEFT / 6.8°</strong></div>
             </div>
-            <div class="console-footer"><span id="statusText">ALERT READY / CAR LINK STANDBY</span><button class="simulate" id="simulate">Simulate signal</button></div>
+            <div class="console-footer"><span id="statusText">ALERT READY / CAR LINK STANDBY</span><div class="console-actions"><button class="simulate" id="simulate">Simulate signal</button><button id="btnToggleCamera" class="hud-btn">INITIALIZE CAMERA</button></div></div>
           </div>
         </div>
       </div>
@@ -221,9 +225,8 @@
     for (let i = 0; i < 18; i += 1) { const bar = document.createElement('span'); bar.className = 'bar'; bar.style.animationDelay = `${i * 35}ms`; chart.appendChild(bar); }
     const scenarios = [
       { action: 'LEFT TURN', confidence: 94, head: 'LEFT / 18°', velocity: '-4.2 m/s²', lean: 'LEFT / 6.8°', text: 'TURN ALERT / CAR LINK STANDBY', risk: 'amber' },
-      { action: 'RIGHT LANE CHANGE', confidence: 88, head: 'RIGHT / 22°', velocity: '+2.1 m/s²', lean: 'RIGHT / 5.2°', text: 'LANE CHANGE / INTENTION SHARED', risk: 'amber' },
-      { action: 'EMERGENCY BRAKE', confidence: 97, head: 'CENTER / 0°', velocity: '-8.7 m/s²', lean: 'CENTER / 0.5°', text: 'BRAKE ALERT / CAR LINK ACTIVE', risk: 'amber' },
-      { action: 'NOMINAL CRUISE', confidence: 99, head: 'CENTER / 2°', velocity: '+0.2 m/s²', lean: 'CENTER / 1.1°', text: 'NOMINAL / CAR LINK STANDBY', risk: 'green' }
+      { action: 'RIGHT TURN', confidence: 88, head: 'RIGHT / 22°', velocity: '+2.1 m/s²', lean: 'RIGHT / 5.2°', text: 'TURN ALERT / INTENTION SHARED', risk: 'amber' },
+      { action: 'EMERGENCY BRAKE', confidence: 97, head: 'CENTER / 0°', velocity: '-8.7 m/s²', lean: 'CENTER / 0.5°', text: 'BRAKE ALERT / CAR LINK ACTIVE', risk: 'amber' }
     ];
     const bars = [...chart.querySelectorAll('.bar')];
     const statusBadge = document.getElementById('statusBadge');
@@ -233,8 +236,8 @@
     function updateConfidenceBars(confidence) {
       bars.forEach((bar, index) => {
         const progress = (index + 1) / bars.length;
-        const variation = (index % 3) * 2;
-        const height = Math.max(14, Math.round(confidence * (.35 + progress * .55) - variation));
+        const variation = Math.random() * 18 - 9;
+        const height = Math.max(14, Math.min(100, Math.round(confidence * (.35 + progress * .55) + variation)));
         bar.style.height = `${height}%`;
       });
       chart.classList.remove('chart');
@@ -250,11 +253,7 @@
     }
 
     document.getElementById('simulate').addEventListener('click', () => {
-      let nextScenario = scenario;
-      while (nextScenario === scenario && scenarios.length > 1) {
-        nextScenario = Math.floor(Math.random() * scenarios.length);
-      }
-      scenario = nextScenario;
+      scenario = (scenario + 1) % scenarios.length;
       const next = scenarios[scenario];
       document.getElementById('prediction').textContent = next.action;
       document.getElementById('confidence').textContent = `${next.confidence}%`;
@@ -264,6 +263,38 @@
       document.getElementById('statusText').textContent = next.text;
       updateConfidenceBars(next.confidence);
       updateStatus(next.risk);
+    });
+
+    const webcamPreview = document.getElementById('webcamPreview');
+    const btnToggleCamera = document.getElementById('btnToggleCamera');
+    const recordingStatus = document.getElementById('recordingStatus');
+    let cameraStream;
+
+    btnToggleCamera.addEventListener('click', async () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+        cameraStream = null;
+        webcamPreview.srcObject = null;
+        webcamPreview.style.display = 'none';
+        btnToggleCamera.textContent = 'INITIALIZE CAMERA';
+        recordingStatus.textContent = 'RECORDING';
+        return;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        window.alert('Camera access is not available in this browser.');
+        return;
+      }
+
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        webcamPreview.srcObject = cameraStream;
+        webcamPreview.style.display = 'block';
+        btnToggleCamera.textContent = 'STOP CAMERA';
+        recordingStatus.textContent = 'OPTICAL FEED ACTIVE';
+      } catch (error) {
+        window.alert('Camera access was denied or could not be initialized.');
+      }
     });
   </script>
 </body>
